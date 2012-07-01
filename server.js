@@ -20,10 +20,11 @@ app.all('*', function (req, res, next) {
 });
 
 app.get('/', function(req, res) {
-	res.send('Simple-db is simple key value storage with friendly API, using JSON storage file and nodejs.');
+	res.send('Instaedit github auth server.');
 	res.end;
 });
 
+/*
 app.get('/save/:key/:value', function(req, res) {
 	var params = req.route.params;
 
@@ -59,13 +60,12 @@ app.get('/load/:key', function(req, res) {
 		res.end;
 	});
 });
+*/
 
 app.get('/authenticate/:code', function(req, res) {
   console.log('authenticating code:' + req.params.code);
   Github.authenticate(req.params.code, function(err, token) {
-    var result = err || !token ? {"error": "bad_code"} : { "token": token };
-    console.log(result);
-    res.json(result);
+  	res.send('<sript> window.opener.setGithubToken(token); window.close(); </script>');
   });
 });
 
@@ -76,8 +76,7 @@ app.get('/login', function (req, res) {
 
 app.get('/oauth-redirect', function (req, res) {
 	console.log(req);
-	res.send('Caught');
-	res.end();
+	res.redirect('/authenticate/' + req.params.code);
 });
 
 var port = process.env.PORT || 5000;
