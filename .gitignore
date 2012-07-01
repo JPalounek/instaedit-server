@@ -1,4 +1,5 @@
 node_modules/
 log/
 data/storage.json
+
 config.json
