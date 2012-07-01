@@ -24,18 +24,15 @@ app.get('/', function(req, res) {
 	res.end;
 });
 
-/*
-app.get('/save/:key/:value', function(req, res) {
-	var params = req.route.params;
-
-	Security.isRequestSafe(req, function (result) {
+app.get('/getcode', function(req, res) {
+  	Security.isRequestSafe(req, function (result) {
 		if(result == true) {
-			var data = {};
-			data.key = params.key;
-			data.val = params.value;
-
-			Storage.save('storage', data, function (result) {
-				res.send(result);
+			Storage.load('storage', req.headers['x-forwarded-for'], function (result) {
+				if(result != 'failed') {
+					res.send('{"result": "found", "token": "' + result + '"}');
+				} else {
+					res.send('{"result": "not found"}');
+				}
 			});
 		} else {
 			res.send('Your request was identified as attack, stop it please.');
@@ -45,27 +42,30 @@ app.get('/save/:key/:value', function(req, res) {
 	});
 });
 
-app.get('/load/:key', function(req, res) {
-	var params = req.route.params;
-
-	Security.isRequestSafe(req, function (result) {
-		if(result == true) {
-			Storage.load('storage', params.key, function (result) {
-				res.send(result);
-			});
-		} else {
-			res.send('Your request was identified as attack, stop it please.');
-		}
-
-		res.end;
-	});
+app.get('/done', function(req, res) {
+	res.send('Close this window now and wait few seconds when Instaedit editor will get info that you signed to github.');
+	res.end();
 });
-*/
 
 app.get('/authenticate/:code', function(req, res) {
-  console.log('authenticating code:' + req.params.code);
   Github.authenticate(req.params.code, function(err, token) {
-  	res.send('<sript> window.opener.setGithubToken(token); window.close(); </script>');
+	Security.isRequestSafe(req, function (result) {
+		if(result == true) {
+			console.log(req);
+			console.log(req.headers);
+			var data = {};
+			data.key = req.headers['x-forwarded-for'];
+			data.val = token;
+
+			Storage.save('storage', data, function (result) {
+				res.redirect('/done')
+			});
+		} else {
+			res.send('Your request was identified as attack, stop it please.');
+		}
+
+		res.end;
+	});
   });
 });
 
@@ -75,8 +75,7 @@ app.get('/login', function (req, res) {
 });
 
 app.get('/oauth-redirect', function (req, res) {
-	console.log(req);
-	res.redirect('/authenticate/' + req.params.code);
+	res.redirect('/authenticate/' + req.query["code"]);
 });
 
 var port = process.env.PORT || 5000;

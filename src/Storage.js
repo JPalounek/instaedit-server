@@ -14,7 +14,7 @@ Storage.prototype.getStorage = function(name, cb) {
 };
 
 Storage.prototype.saveStorage = function(name, data, done) {
-	fs.writeFile('data/' + name + '.json', JSON.stringify(data), function (err) {
+	fs.writeFile(__dirname + '/../data/' + name + '.json', JSON.stringify(data), function (err) {
   		if (err) throw err;
   		done();
 	});
@@ -66,9 +66,11 @@ Storage.prototype.load = function(storage, key, cb) {
 	this.getStorage(storage, function (data) {
 		console.log('Loading ' + key);
 
-		for (var i in data.reverse()) {
-			if(data[i].key == key) {
-				cb(data[i].val);
+		if(typeof data != 'undefined') {
+			for (var i in data.reverse()) {
+				if(data[i].key == key) {
+					cb(data[i].val);
+				}
 			}
 		}
 
