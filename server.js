@@ -20,7 +20,7 @@ app.all('*', function (req, res, next) {
 });
 
 app.get('/', function(req, res) {
-	res.send('Instaedit github auth server.');
+	res.send('Instaedit github server.');
 	res.end;
 });
 
@@ -30,6 +30,7 @@ app.get('/getcode', function(req, res) {
 			Storage.load('storage', req.headers['x-forwarded-for'], function (result) {
 				if(result != 'failed') {
 					res.send('{"result": "found", "token": "' + result + '"}');
+					Storage.remove('storage', req.headers['x-forwarded-for']);
 				} else {
 					res.send('{"result": "not found"}');
 				}

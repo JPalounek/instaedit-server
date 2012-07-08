@@ -78,4 +78,28 @@ Storage.prototype.load = function(storage, key, cb) {
 	});
 };
 
+Storage.prototype.remove = function(storage, key) {
+	this.getStorage(storage, function (data) {
+		var newVersion = new Array();
+		console.log('Loading ' + key);
+
+		if(typeof data != 'undefined') {
+			for (var i in data.reverse()) {
+				if(data[i].key != key) {
+					var record = {};
+					record.key = data[i].key;
+					record.val = data[i].val;
+					newVersion.push(record);
+				} else {
+					console.log('Skipping ' + data[i].key + ' ' + data[i].val);
+				}
+			}
+		}
+
+		Storage.prototype.saveStorage(storage, newVersion, function () {
+			console.log('Storage saved!');
+		});
+	});
+};
+
 module.exports = Storage;
