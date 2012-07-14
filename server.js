@@ -12,6 +12,11 @@ Security = new Security();
 Storage = new Storage();
 Github = new Github();
 
+app.configure(function() { 
+    app.use(express.bodyParser()); 
+    app.use(app.router); 
+});
+
 app.all('*', function (req, res, next) {
   res.header('Access-Control-Allow-Origin', '*'); 
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS'); 
@@ -77,6 +82,13 @@ app.get('/login', function (req, res) {
 
 app.get('/oauth-redirect', function (req, res) {
 	res.redirect('/authenticate/' + req.query["code"]);
+});
+
+app.post('/commit', function (req, res) {
+	Github.commit(req.body, function (result) {
+		res.send('{"result": "' + result + '"}');
+		res.end();
+	});
 });
 
 var port = process.env.PORT || 5000;

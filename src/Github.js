@@ -3,7 +3,8 @@ var url   = require('url'),
     https = require('https'),
     fs    = require('fs'),
     app   = require('express').createServer(),
-    qs    = require('querystring');
+    qs    = require('querystring'),
+    GitHubApi = require("github");
 
 var Github = function () {};
 
@@ -46,6 +47,15 @@ Github.prototype.authenticate = function (code, cb) {
   req.write(data);
   req.end();
   req.on('error', function(e) { cb(e.message); });
+}
+
+Github.prototype.commit = function (data, cb) {
+  console.log('Commit!');
+  var data = JSON.parse(data);
+
+  console.log(data);
+
+  cb('failed');
 }
 
 module.exports = Github;
