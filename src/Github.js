@@ -4,6 +4,7 @@ var url   = require('url'),
     fs    = require('fs'),
     app   = require('express').createServer(),
     qs    = require('querystring'),
+    request = require('request'),
     GitHubApi = require("github");
 
 var Github = function () {};
@@ -17,6 +18,178 @@ Github.prototype.loadConfig = function() {
   }
 
   return config;
+}
+
+Github.prototype.getParentTreeSha = function (target, cb) {
+  var link = '/repos/' + target[0] + '/' + target[1] + '/git/refs/heads/' + target[2];
+
+  var options = {
+    host: 'api.github.com',
+    method: 'GET',
+    path: link
+  };
+
+  http.get(options, function(res) {
+    var result = '';
+    res.setEncoding('utf-8');
+
+    res.on('data', function (chunk) {
+      result += chunk;
+    });
+
+    res.on('end', function () {
+      if(res.statusCode == 200) {
+        console.log(res.responseText);
+        cb(JSON.parse(res.responseText));
+      } else {
+        console.log(res.statusCode);
+        cb(res.statusCode);
+      }
+    });
+
+    res.on('error', function(e) {
+        console.log('problem with request: ' + e.message);
+    });
+  });
+
+}
+
+Github.prototype.commit = function (data, cb) {
+  console.log('Commit!');
+
+  var target = data.target.replace('https://raw.github.com/').split('/');
+
+  var path = '';
+  for (var i in target) {
+    var key = parseInt(i) + 3;
+    if(typeof target[key] != 'undefined') {
+      path += target[key];
+    }
+  }
+
+  var commitData = {};
+  commitData.user = target[0].replace('undefined', '');
+  commitData.repo = target[1];
+  commitData.tree = data.tree;
+  commitData.parents = data.parents;
+  commitData.message = 'Changed ' + path.split('/')[path.split('/').length - 1] + ' - via Instaedit.';
+  commitData.content = data.data;
+  commitData.encoding = 'utf-8';
+
+  console.log(commitData);
+
+  var gh = new GitHubApi({
+    version: "3.0.0"
+  });
+
+  console.log(data.token);
+  gh.authenticate({
+    type: "oauth",
+    token: data.token
+  });
+
+  gh.user.get({}, function (err, data) {
+    console.log(err);
+    console.log(data);
+
+    var blob = {};
+    blob.repo = commitData.repo;
+    blob.user = commitData.user;
+    blob.content = commitData.content;
+    blob.encoding = commitData.encoding;
+    console.log(blob);
+/*
+    var options = {
+      host: 'api.github.com',
+      port: '80',
+      path: '/repos/' + commitData.user + '/' + commitData.repo + '/git/blobs',
+      method: 'POST'
+    };
+
+    var req = http.get(options, function(res) {
+      var result = '';
+      res.setEncoding('utf-8');
+
+      res.on('data', function (chunk) {
+        result += chunk;
+      });
+
+      res.on('end', function () {
+        console.log(result);
+        console.log(res.statusCode);
+      });
+
+      res.on('error', function(e) {
+        console.log('problem with request: ' + e.message);
+      });
+    });
+
+    req.write(blob);
+    req.end();
+
+
+    var blob = {};
+      // blob.user = commitData.user;
+      // blob.repo = commitData.repo;
+    blob.content = commitData.content;
+    blob.encoding = commitData.encoding;
+*/
+
+    // console.log(JSON.parse(blob));
+    /*
+    console.log('--> blob!');
+    console.log(JSON.stringify(blob));
+    request.post({
+      headers: {'content-type' : 'application/x-www-form-urlencoded'},
+      url: 'http://api.github.com/repos/' + commitData.user + '/' + commitData.repo + '/git/blobs',
+      body: JSON.stringify(blob),
+    }, function(error, response){
+        console.log('--> error!');
+        console.log(error);
+        console.log('--> response!');
+        console.log(response);
+        cb('failed');
+    });
+    */
+
+    var gist = {};
+    gist.description = commitData.message;
+    gist.public = true;
+
+    gist.files = {};
+    gist.files[path.split('/')[path.split('/').length - 1]] = {};
+    gist.files[path.split('/')[path.split('/').length - 1]].content = commitData.content;
+    console.log(JSON.stringify(gist));
+/*
+    request.post({
+      headers: {'content-type' : 'application/x-www-form-urlencoded'},
+      url: 'http://github.com/api/v3/gists/',
+      json: JSON.stringify(gist),
+      followRedirect: true,
+    }, function(error, response){
+        console.log('--> error!');
+        console.log(error);
+        console.log('--> response!');
+        console.log(response);
+        cb('failed');
+    });
+*/
+    
+    gh.gitdata.createBlob(blob, function (err, blob) {
+      console.log('--> error!');
+      console.log(err);
+      console.log('--> blob!');
+      console.log(blob);
+      cb('failed');
+    });
+    
+  });
+/*
+  gh.gitdata.createCommit(commitData, function (err, response) {
+    console.log(err);
+    console.log(response);
+  });
+*/
 }
 
 Github.prototype.authenticate = function (code, cb) {
@@ -47,15 +220,6 @@ Github.prototype.authenticate = function (code, cb) {
   req.write(data);
   req.end();
   req.on('error', function(e) { cb(e.message); });
-}
-
-Github.prototype.commit = function (data, cb) {
-  console.log('Commit!');
-  var data = JSON.parse(data);
-
-  console.log(data);
-
-  cb('failed');
 }
 
 module.exports = Github;
