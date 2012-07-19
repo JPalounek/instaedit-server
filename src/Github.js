@@ -97,60 +97,7 @@ Github.prototype.commit = function (data, cb) {
     blob.user = commitData.user;
     blob.content = commitData.content;
     blob.encoding = commitData.encoding;
-    console.log(blob);
-/*
-    var options = {
-      host: 'api.github.com',
-      port: '80',
-      path: '/repos/' + commitData.user + '/' + commitData.repo + '/git/blobs',
-      method: 'POST'
-    };
-
-    var req = http.get(options, function(res) {
-      var result = '';
-      res.setEncoding('utf-8');
-
-      res.on('data', function (chunk) {
-        result += chunk;
-      });
-
-      res.on('end', function () {
-        console.log(result);
-        console.log(res.statusCode);
-      });
-
-      res.on('error', function(e) {
-        console.log('problem with request: ' + e.message);
-      });
-    });
-
-    req.write(blob);
-    req.end();
-
-
-    var blob = {};
-      // blob.user = commitData.user;
-      // blob.repo = commitData.repo;
-    blob.content = commitData.content;
-    blob.encoding = commitData.encoding;
-*/
-
-    // console.log(JSON.parse(blob));
-    /*
-    console.log('--> blob!');
-    console.log(JSON.stringify(blob));
-    request.post({
-      headers: {'content-type' : 'application/x-www-form-urlencoded'},
-      url: 'http://api.github.com/repos/' + commitData.user + '/' + commitData.repo + '/git/blobs',
-      body: JSON.stringify(blob),
-    }, function(error, response){
-        console.log('--> error!');
-        console.log(error);
-        console.log('--> response!');
-        console.log(response);
-        cb('failed');
-    });
-    */
+  
 
     var gist = {};
     gist.description = commitData.message;
@@ -160,20 +107,6 @@ Github.prototype.commit = function (data, cb) {
     gist.files[path.split('/')[path.split('/').length - 1]] = {};
     gist.files[path.split('/')[path.split('/').length - 1]].content = commitData.content;
     console.log(JSON.stringify(gist));
-/*
-    request.post({
-      headers: {'content-type' : 'application/x-www-form-urlencoded'},
-      url: 'http://github.com/api/v3/gists/',
-      json: JSON.stringify(gist),
-      followRedirect: true,
-    }, function(error, response){
-        console.log('--> error!');
-        console.log(error);
-        console.log('--> response!');
-        console.log(response);
-        cb('failed');
-    });
-*/
     
     gh.gitdata.createBlob(blob, function (err, blob) {
       console.log('--> error!');
@@ -184,12 +117,6 @@ Github.prototype.commit = function (data, cb) {
     });
     
   });
-/*
-  gh.gitdata.createCommit(commitData, function (err, response) {
-    console.log(err);
-    console.log(response);
-  });
-*/
 }
 
 Github.prototype.authenticate = function (code, cb) {
